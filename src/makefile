@@ -48,8 +48,8 @@ LIBDIRS  = -L$(TOOLPATH)/arm-none-eabi/lib/ -L$(TOOLPATH)/arm-none-eabi/lib/armv
 LIBS = -lm -lc_nano -lnosys -lgcc
 
 #  Compiler options
-GCFLAGS = -Wall -fno-common -mcpu=$(CPU) -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp
-GCFLAGS += $(INCDIRS)
+CFLAGS = -Wall -fno-common -mcpu=$(CPU) -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp
+CFLAGS += $(INCDIRS)
 
 #  Assembler options
 ASFLAGS = -mcpu=$(CPU)
@@ -62,35 +62,38 @@ LDFLAGS += $(LIBS)
 
 
 #  Tools paths
-BINDIR = $(TOOLPATH)/bin
-
-CC = $(BINDIR)/arm-none-eabi-gcc
-AS = $(BINDIR)/arm-none-eabi-as
-AR = $(BINDIR)/arm-none-eabi-ar
-LD = $(BINDIR)/arm-none-eabi-ld
-OBJCOPY = $(BINDIR)/arm-none-eabi-objcopy
-SIZE = $(BINDIR)/arm-none-eabi-size
-OBJDUMP = $(BINDIR)/arm-none-eabi-objdump
+CC = $(TOOLPATH)/bin/arm-none-eabi-gcc
+AS = $(TOOLPATH)/bin/arm-none-eabi-as
+AR = $(TOOLPATH)/bin/arm-none-eabi-ar
+LD = $(TOOLPATH)/bin/arm-none-eabi-ld
+OBJCOPY = $(TOOLPATH)/bin/arm-none-eabi-objcopy
+SIZE = $(TOOLPATH)/bin/arm-none-eabi-size
+OBJDUMP = $(TOOLPATH)/bin/arm-none-eabi-objdump
 
 #########################################################################
 
-all:: $(PROJECT).hex $(PROJECT).bin stats dump
+all:: $(PROJECT).hex stats dump #$(PROJECT).bin stats dump
 
 $(PROJECT).bin: $(PROJECT).elf
+	@echo -e "[1;37m\n\nExtracting TEXT and DATA $(PROJECT).elf -> $(PROJECT).bin" && echo -n "[0m"
 	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
 
 $(PROJECT).hex: $(PROJECT).elf
+	@echo -e "[1;37m\n\nReformatting $(PROJECT).elf -> $(PROJECT).hex" && echo -n "[0m"
 	$(OBJCOPY) -R .stack -O ihex $(PROJECT).elf $(PROJECT).hex
 
 #  Linker invocation
 $(PROJECT).elf: $(OBJECTS)
+	@echo -e "[1;37m\n\nLinking $(OBJECTS) -> $(PROJECT).elf" && echo -n "[0m" 
 	$(LD) $(OBJECTS) $(LDFLAGS) -o $(PROJECT).elf
 
 stats: $(PROJECT).elf
+	@echo -e "[1;37m\n\nComputing resulting stats" && echo -n "[0m"
 	$(SIZE) $(PROJECT).elf
 	
 dump: $(PROJECT).elf
-	$(OBJDUMP) -h $(PROJECT).elf	
+	@echo -e "[1;37m\n\nDumping headers" && echo -n "[0m"
+	$(OBJDUMP) -h $(PROJECT).elf
 
 clean:
 	rm *.hex *.elf *.map *.bin *.lst *.o 
@@ -100,14 +103,15 @@ install:
 	
 #########################################################################
 .c.o :
-	@echo Compiling $<, writing to $@...
-	$(CC) $(GCFLAGS) -c $< -o $@ > $(basename $@).lst
+	@echo -e "[1;37m\n\nCompiling $< -> $@" && echo -n "[0m"
+	$(CC) $(CFLAGS) -c $< -o $@ > $(basename $@).lst
     
 .cpp.o :
-	@echo Compiling $<, writing to $@...
-	$(CC) $(GCFLAGS) -c $<
+	@echo -e "[1;37m\n\nCompiling $< -> $@" && echo -n "[0m"
+	$(CC) $(CFLAGS) -c $<
 
 .s.o :
-	@echo Assembling $<, writing to $@...
+	@echo -e "\n\n[1;37mAssembling $< -> $@" && echo -n "[0m"
 	$(AS) $(ASFLAGS) -o $@ $<  > $(basename $@).lst
+
 #########################################################################
