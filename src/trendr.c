@@ -45,6 +45,7 @@ void local_memset(void *dst, uint8_t c, size_t n){
 
 
 //TODO: If recv'd chars > len then we never get recv "OK"
+//TODO: No failure mode! Check for ERROR
 int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
     static const char esp8266_term_str[] = {'O', 'K', '\r', '\n'}; 
     size_t recvd_chars = 0;
@@ -82,12 +83,14 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
                 break;
             }
         }
+        
+        /* Do the same as above but check for ERROR? First to complete is representative of state? */
     }
 
 exit:    
     UARTAssignActiveUART(uart_prior);           
     char tbuf[256]; 
-    UARTWrite(tbuf, sprintf(tbuf, "\nRecv'd %d bytes\r\n", recvd_chars));
+    UARTWrite(tbuf, sprintf(tbuf, "\nRecv'd %d bytes; ret=%d; tci=%d\r\n", recvd_chars, ret, term_char_index));
     return ret;
 } 
 
@@ -117,8 +120,44 @@ void buf_fill(uint8_t *buf, char *watermark, size_t wm_len, size_t dest_len){
 
 
 
+void cmd_loop(void){
+    char cmd_buf[64]; 
+    char resp_buf[1024];
+    int recvd_chars;
+    int response_chars;    
+
+    while(1){
+        recvd_chars = 0; 
+        UARTWrite(">>> ", 4);
+
+        memset(cmd_buf, ' ', sizeof(cmd_buf));
+        memset(resp_buf, ' ', sizeof(resp_buf));
+
+        /* Read from input until RETURN (0x0D) */
+        while(recvd_chars < sizeof(cmd_buf)-2){
+            if(UARTAvail() != 0){
+                UARTRead(&cmd_buf[recvd_chars], 1);
+                UARTWrite(&cmd_buf[recvd_chars], 1);
+                recvd_chars++;
+                
+                /* User pressed RETURN */
+                if('\r' == cmd_buf[recvd_chars-1]){ //FIXME: Bounds checking
+                    cmd_buf[recvd_chars] = '\n';
+                    response_chars = esp8266_do_cmd(cmd_buf, resp_buf, sizeof(resp_buf));
+                    //UARTWrite("Response:\r\n", 11);
+                    UARTWrite(resp_buf, response_chars); 
+                    break;  
+                }
+            }else                                
+                continue;
+        }
+    }
+}
+
+
+
 int main(void){
-    char buf[2048]; 
+    char buf[1024]; 
     int recvd_chars;
     char *cmds[] =  {    
 //                        CMD_CIPSTATUS, 
@@ -133,13 +172,15 @@ int main(void){
     int index = 0; 
 
     sys_init(); 
+    cmd_loop();
+    return 0; 
     UARTWrite("Beginning comms\r\n", 17);
 
     while(1){
 //        LED_ON;
 //        delay_us(500*1000);
 //        LED_OFF;
-        delay_us(500*1000);
+        delay_us(1000*1000);
 
         /* Send command to module and print response */
 //        recvd_chars = esp8266_do_cmd(CMD_VIEW_VERSION_INFO, buf, sizeof(buf)); 
