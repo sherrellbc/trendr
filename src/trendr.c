@@ -8,8 +8,13 @@
 #define ESP8266_UART_CHANNEL    1 
 
 /* ESP8266 Command Set */
-#define CMD_VIEW_VERSION_INFO "AT+GMR\r\n"
-
+#define CMD_VIEW_VERSION_INFO   "AT+GMR\r\n"
+#define CMD_CIPSTATUS           "AT+CIPSTATUS\r\n"
+#define CMD_LIST_APS            "AT+CWLAP\r\n"
+#define CMD_AT_TEST             "AT\r\n"
+#define CMD_AT_ECHO_OFF         "ATE0\r\n"
+#define CMD_AT_ECHO_ON          "ATE1"
+#define CMD_GET_UART_CFG        "AT+UART_CUR\r\n"
 
 #define  LED_ON		GPIOC_PSOR=(1<<5)
 #define  LED_OFF	GPIOC_PCOR=(1<<5)
@@ -41,56 +46,48 @@ void local_memset(void *dst, uint8_t c, size_t n){
 
 //TODO: If recv'd chars > len then we never get recv "OK"
 int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
+    static const char esp8266_term_str[] = {'O', 'K', '\r', '\n'}; 
     size_t recvd_chars = 0;
     int uart_prior, ret = -1; 
+    int term_char_index = 0;
 
+    /* Sanity check */
     if(NULL == reply)
         return -1; 
-    
+
     /* Grab the current UART channel so it may be restored */
     uart_prior = UARTAssignActiveUART(ESP8266_UART_CHANNEL);
 
     /* Write the command to the esp8266; strlen means no null-term is sent */
     UARTWrite(cmd, strlen(cmd));
-//    goto exit;
 
     /* Loop and save the response in the buffer */
     //TODO: Implement timeout
     while(recvd_chars < len-1){
 
         if(UARTAvail() != 0){
-            UARTRead(&(reply[recvd_chars]), 1);
+            UARTRead(&reply[recvd_chars], 1);
             recvd_chars++;
         }else
             continue;
+       
+        /* Check if the byte-stream has terminated */ 
+        if(esp8266_term_str[term_char_index] == reply[recvd_chars-1]){
+            term_char_index++; 
 
-        if(21 == recvd_chars){
-            ret = 21;
-            goto exit;
-        }
-
-        /* If last recv'd char was a newline then all has been transferred */
-        if( ('\n' == reply[recvd_chars-1]) || ('\r' == reply[recvd_chars-1]) ){
-            
-            /* Properly terminate the response buffer */            
-            if(recvd_chars >= len)
-                reply[len-1] = '\0';
-            else
-                reply[recvd_chars] = '\0';
-            
-
-            /* If "OK" present in response then success, else fail (for now) */
-            if(NULL == strstr(reply, "OK"))
-                ret = 0;
-            else 
-                ret = 0;
- 
-            break; 
+            /* A true evaluation means we matched the entire termination string; exit */
+            if(sizeof(esp8266_term_str)/sizeof(char) == term_char_index){
+                reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
+                ret = recvd_chars; 
+                break;
+            }
         }
     }
 
 exit:    
     UARTAssignActiveUART(uart_prior);           
+    char tbuf[256]; 
+    UARTWrite(tbuf, sprintf(tbuf, "\nRecv'd %d bytes\r\n", recvd_chars));
     return ret;
 } 
 
@@ -112,43 +109,51 @@ void buf_fill(uint8_t *buf, char *watermark, size_t wm_len, size_t dest_len){
     int num_times = dest_len/wm_len;
     int index = 0; 
     
-//    for(; num_times>=0; num_times--){
-//        memcpy((void *) (&buf[index]), (void *)watermark, wm_len); 
-//        memcpy(&buf[index], "DEADBEEF", 8);
-        memset((void*)buf, (int) 'Z', 256);
-        index += wm_len;        
-//    }
+    for(; num_times>=0; num_times--){
+        memcpy((void *) (&buf[index]), (void *)watermark, wm_len); 
+        index += wm_len; 
+    }
 }
 
 
 
 int main(void){
-    char buf[256]; 
-    int recvd_chars; 
+    char buf[2048]; 
+    int recvd_chars;
+    char *cmds[] =  {    
+//                        CMD_CIPSTATUS, 
+//                        CMD_VIEW_VERSION_INFO,
+                        CMD_LIST_APS,         
+//                        CMD_AT_TEST,          
+//                        CMD_AT_ECHO_OFF,      
+//                        CMD_AT_ECHO_ON,       
+//                        CMD_GET_UART_CFG
+                    };     
+
+    int index = 0; 
 
     sys_init(); 
     UARTWrite("Beginning comms\r\n", 17);
 
     while(1){
-        LED_ON;
+//        LED_ON;
+//        delay_us(500*1000);
+//        LED_OFF;
         delay_us(500*1000);
-        LED_OFF;
-        delay_us(500*1000);
-
-        /* Insert watermark for debugging */
-//        buf_fill( (uint8_t *)buf, "DEADBEEF", 8, sizeof(buf));
-//        local_memset(buf, (int) 'g', 10);
 
         /* Send command to module and print response */
-        recvd_chars = esp8266_do_cmd(CMD_VIEW_VERSION_INFO, buf, 32);
+//        recvd_chars = esp8266_do_cmd(CMD_VIEW_VERSION_INFO, buf, sizeof(buf)); 
+        memset(buf, ' ', sizeof(buf));
+        UARTWrite("\n\n= = = = = = = = = = = = = = = = = = = =", 41);
+        recvd_chars = esp8266_do_cmd(cmds[(index++)%(sizeof(cmds)/sizeof(char *))], buf, sizeof(buf));
 
         if(-1 == recvd_chars){
-            UARTWrite("An error occurred .. \r\n", sizeof("An error occurred .. \r\n")-1);
-            UARTWrite(buf, 256);
+            UARTWrite("\nAn error occurred .. \r\n", sizeof("\nAn error occurred .. \r\n")-1);
+        //    UARTWrite(buf, 256);
             continue;     
         }
 
-        UARTWrite("\nESP8266 Responded: ", sizeof("ESP8266 Responded: ")-1);
+        UARTWrite("\nESP8266 Responded:\n", sizeof("ESP8266 Responded:\n")-1);
         UARTWrite(buf, recvd_chars);
     }
 
