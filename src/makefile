@@ -15,7 +15,7 @@ OBJECTS	=   $(PROJECT).o \
             uart.o
 
 # Top-level directory of the toolchain
-TOOLPATH = /home/sherrbc1/.programs/gcc-arm-none-eabi-5_4-2016q2
+TOOLPATH = /home/branden/.programs/gcc-arm-none-eabi-5_4-2016q2
 
 # Top-level source directory relative to the makefile
 TEENSY3X_BASEPATH = ..
@@ -96,7 +96,7 @@ dump: $(PROJECT).elf
 	$(OBJDUMP) -h $(PROJECT).elf
 
 clean:
-	rm *.hex *.elf *.map *.bin *.lst *.o 
+	rm *.hex *.elf *.map *.lst *.o 
 
 install:
 	$(LOADER) --mcu=$(MODEL) -vw $(PROJECT).hex
