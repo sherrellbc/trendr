@@ -3,6 +3,7 @@ PROJECT=trendr
 
 #  Type of CPU/MODEL in target hardware
 CPU=cortex-m4
+MARCH=armv7e-m
 MODEL=mk20dx256
 
 # Location of the Teensy Loader
@@ -44,11 +45,12 @@ OPTIMIZATION = 0
 DEBUG = -g
 
 #  List the directories to be searched for libraries during linking.
-LIBDIRS  = -L$(TOOLPATH)/arm-none-eabi/lib/ -L$(TOOLPATH)/arm-none-eabi/lib/armv7e-m/ -L$(TOOLPATH)/lib/gcc/arm-none-eabi/5.4.1/armv7e-m/softfp
+#LIBDIRS  = -L$(TOOLPATH)/arm-none-eabi/lib/ -L$(TOOLPATH)/arm-none-eabi/lib/armv7e-m/ -L$(TOOLPATH)/lib/gcc/arm-none-eabi/5.4.1/armv7e-m/softfp
+LIBDIRS  = -L$(TOOLPATH)/arm-none-eabi/lib/armv7e-m/ -L$(TOOLPATH)/lib/gcc/arm-none-eabi/5.4.1/armv7e-m/softfp
 LIBS = -lm -lc_nano -lnosys -lgcc
 
 #  Compiler options
-CFLAGS = -Wall -fno-common -mcpu=$(CPU) -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp
+CFLAGS = -Wall -fno-common -mcpu=$(CPU) -march=$(MARCH) -mtune=$(CPU) -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp
 CFLAGS += $(INCDIRS)
 
 #  Assembler options
