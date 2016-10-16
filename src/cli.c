@@ -14,7 +14,7 @@
 
 
 void trendr_cli(void){
-    char cmd_buf[32]; 
+    char cmd_buf[128]; 
     char resp_buf[1024];
     int recvd_chars;
     int response_chars;    
@@ -27,8 +27,8 @@ void trendr_cli(void){
         UARTWrite(CLI_PROMPT, sizeof(CLI_PROMPT)-1);
         
         /* Clear buffers before receiving data */
-        memset(cmd_buf, ' ', sizeof(cmd_buf));
-        memset(resp_buf, ' ', sizeof(resp_buf));
+        memset(cmd_buf, '\0', sizeof(cmd_buf));
+        memset(resp_buf, '\0', sizeof(resp_buf));
 
         /* Read from input until RETURN (0x0D) */
         while(recvd_chars < sizeof(cmd_buf)-2){
