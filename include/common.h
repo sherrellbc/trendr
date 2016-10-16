@@ -63,9 +63,8 @@
  *  If your project does not include any of the UART drivers, these
  *  defines are meaningless and can be set to anything.
  */
-#define TERM_PORT           UART0_BASE_PTR
-#define TERMINAL_BAUD       115200
-
+#define DEBUG_UART_CHANNEL  0
+//#define ESP8266_UART_CHANNEL 1
 
 extern  int32_t				mcg_clk_hz;		// following PLL init, holds actual MCG clock in Hz
 extern  int32_t				mcg_clk_khz;	// following PLL init, holds actual MCG clock in kHz

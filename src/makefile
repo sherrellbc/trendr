@@ -13,7 +13,10 @@ LOADER=../tools/teensy_loader_cli/teensy_loader_cli
 OBJECTS	=   $(PROJECT).o \
 	        sysinit.o \
 	        crt0.o    \
-            uart.o
+            util.o \
+            uart.o  \
+            esp8266_driver.o \
+            cli.o \
 
 # Top-level directory of the toolchain
 TOOLPATH = /home/branden/.programs/gcc-arm-none-eabi-5_4-2016q2
@@ -98,7 +101,7 @@ dump: $(PROJECT).elf
 	$(OBJDUMP) -h $(PROJECT).elf
 
 clean:
-	rm *.hex *.elf *.map *.lst *.o 
+	rm -f *.hex *.elf *.map *.lst *.o 
 
 install:
 	$(LOADER) --mcu=$(MODEL) -vw $(PROJECT).hex

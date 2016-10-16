@@ -12,6 +12,8 @@
 #ifndef __UART_H__
 #define __UART_H__
 
+#include "stdint.h"
+
 
 /*
  *  These routines support access to all UARTs on the Teensy 3.x (K20).
@@ -28,6 +30,5 @@ uint32_t		UARTAssignActiveUART(uint32_t  uartnum);
 int32_t			UARTWrite(const char *ptr, int32_t len);
 int32_t			UARTAvail(void);
 int32_t			UARTRead(char *ptr, int32_t len);
-
 
 #endif /* __UART_H__ */
