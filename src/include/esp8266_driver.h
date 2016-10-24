@@ -23,4 +23,7 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len);
 
 
 
+int esp8266_get_version_info(char *reply, size_t len);
+
+
 #endif /* _ESP8266_DRIVER_H */

@@ -4,13 +4,6 @@
 #include "stddef.h"
 
 
-/* Print a character and hex value to the DEBUG serial interface
- * 
- * @param c : The character to print
- */
-void print_char(char c);
-
-
 
 /* Full a buffer modulo dest_len times with a watermark
  * 
@@ -20,16 +13,6 @@ void print_char(char c);
  * @param dest_len  : Length of destination buffer
  */
 void buf_fill(uint8_t *buf, char *watermark, size_t wm_len, size_t dest_len);
-
-
-
-/*
- *
- *
- *
- */
-int dlog(const char *fmt, ...);
-
 
 
 #endif /* _UTIL_H */

@@ -10,20 +10,14 @@ MODEL=mk20dx256
 LOADER=../tools/teensy_loader_cli/teensy_loader_cli
 
 #  Build the list of object files needed
-OBJECTS	=   $(PROJECT).o \
-	        sysinit.o \
-	        crt0.o    \
-            util.o \
-            uart.o  \
-            esp8266_driver.o \
-            cli.o \
+CORE_OBJ = sysinit.o crt0.o
 
 # Top-level directory of the toolchain
 TOOLPATH = /home/branden/.programs/gcc-arm-none-eabi-5_4-2016q2
 
 # Top-level source directory relative to the makefile
 TEENSY3X_BASEPATH = ..
-
+BUILDDIR=build
 
 #  Describe the various include and source directories needed.
 #  These usually point to files from whatever distribution
@@ -31,7 +25,6 @@ TEENSY3X_BASEPATH = ..
 #  include paths to any needed GCC includes or libraries.
 TEENSY3X_INC     = $(TEENSY3X_BASEPATH)/include
 GCC_INC          = $(TOOLPATH)/arm-none-eabi/include
-
 
 # Additional source directories. Separate paths with ':'
 VPATH = $(TEENSY3X_BASEPATH)/common
@@ -53,7 +46,10 @@ LIBDIRS  = -L$(TOOLPATH)/arm-none-eabi/lib/armv7e-m/ -L$(TOOLPATH)/lib/gcc/arm-n
 LIBS = -lm -lc_nano -lnosys -lgcc
 
 #  Compiler options
-CFLAGS = -Wall -fno-common -mcpu=$(CPU) -march=$(MARCH) -mtune=$(CPU) -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp
+CFLAGS =    -Wall -Werror -fno-common -mcpu=$(CPU) -march=$(MARCH) -mtune=$(CPU) \
+            -mthumb -O$(OPTIMIZATION) $(DEBUG) -DF_CPU=72000000 --specs=nano.specs -mfloat-abi=softfp \
+            -DESP8266_DEBUG
+
 CFLAGS += $(INCDIRS)
 
 #  Assembler options
@@ -75,38 +71,53 @@ OBJCOPY = $(TOOLPATH)/bin/arm-none-eabi-objcopy
 SIZE = $(TOOLPATH)/bin/arm-none-eabi-size
 OBJDUMP = $(TOOLPATH)/bin/arm-none-eabi-objdump
 
-#########################################################################
 
-all:: $(PROJECT).hex stats dump #$(PROJECT).bin stats dump
 
-$(PROJECT).bin: $(PROJECT).elf
-	@echo -e "[1;37m\n\nExtracting TEXT and DATA $(PROJECT).elf -> $(PROJECT).bin" && echo -n "[0m"
-	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
+# Instructions for building selected targets
+all : $(PROJECT) cli# stats dump
 
-$(PROJECT).hex: $(PROJECT).elf
-	@echo -e "[1;37m\n\nReformatting $(PROJECT).elf -> $(PROJECT).hex" && echo -n "[0m"
-	$(OBJCOPY) -R .stack -O ihex $(PROJECT).elf $(PROJECT).hex
+dir :
+	mkdir -p $(BUILDDIR)
 
-#  Linker invocation
-$(PROJECT).elf: $(OBJECTS)
-	@echo -e "[1;37m\n\nLinking $(OBJECTS) -> $(PROJECT).elf" && echo -n "[0m" 
-	$(LD) $(OBJECTS) $(LDFLAGS) -o $(PROJECT).elf
+cli : $(CORE_OBJ) uart.o esp8266_driver.o util.o logging.o bsp.o cli.o
+	@echo -e "[1;37m\n\nLinking $^ -> $@.elf" && echo -n "[0m" 
+	$(LD) $^ $(LDFLAGS) -o $@.elf
+	@echo -e "[1;37m\n\nReformatting $@.elf -> $@.hex" && echo -n "[0m"
+	$(OBJCOPY) -R .stack -O ihex $@.elf $@.hex
 
-stats: $(PROJECT).elf
+$(PROJECT) : $(CORE_OBJ) uart.o esp8266_driver.o util.o logging.o bsp.o $(PROJECT).o
+	@echo -e "[1;37m\n\nLinking $^ -> $@.elf" && echo -n "[0m" 
+	$(LD) $^ $(LDFLAGS) -o $@.elf
+	@echo -e "[1;37m\n\nReformatting $@.elf -> $@.hex" && echo -n "[0m"
+	$(OBJCOPY) -R .stack -O ihex $@.elf $@.hex
+
+#$(PROJECT).bin : $(PROJECT).elf
+#	@echo -e "[1;37m\n\nExtracting TEXT and DATA $(PROJECT).elf -> $(PROJECT).bin" && echo -n "[0m"
+#	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
+
+stats : $(PROJECT) cli
 	@echo -e "[1;37m\n\nComputing resulting stats" && echo -n "[0m"
 	$(SIZE) $(PROJECT).elf
 	
-dump: $(PROJECT).elf
+dump : $(PROJECT) cli
 	@echo -e "[1;37m\n\nDumping headers" && echo -n "[0m"
 	$(OBJDUMP) -h $(PROJECT).elf
 
+
+
+# Supporting psuedo targets
 clean:
 	rm -f *.hex *.elf *.map *.lst *.o 
 
-install:
+install : $(PROJECT)
 	$(LOADER) --mcu=$(MODEL) -vw $(PROJECT).hex
 	
-#########################################################################
+install-cli : cli
+	$(LOADER) --mcu=$(MODEL) -vw cli.hex
+
+
+
+# Override compiling instructions to include additional printed information
 .c.o :
 	@echo -e "[1;37m\n\nCompiling $< -> $@" && echo -n "[0m"
 	$(CC) $(CFLAGS) -c $< -o $@ > $(basename $@).lst

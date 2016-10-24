@@ -2,12 +2,14 @@
 #include <string.h>
 #include "uart.h"
 #include "util.h"
+#include "delay.h"
+#include "logging.h"
 
 #define ESP8266_UART_CHANNEL    1 
 #define ESP8266_UART_BAUD_RATE  115200
 
 /* ESP8266 Command Set */
-#define CMD_VIEW_VERSION_INFO   "AT+GMR\r\n"
+#define CMD_GET_VERSION_INFO   "AT+GMR\r\n"
 #define CMD_CIPSTATUS           "AT+CIPSTATUS\r\n"
 #define CMD_LIST_APS            "AT+CWLAP\r\n"
 #define CMD_AT_TEST             "AT\r\n"
@@ -39,11 +41,14 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
     if(NULL == reply)
         return -1; 
 
+#ifdef ESP8266_DEBUG
+    dlog("[db] Sending command [%s]\r\n\n", cmd);
+#endif
+
     /* Grab the current UART channel so it may be restored */
     uart_prior = UARTAssignActiveUART(ESP8266_UART_CHANNEL);
 
     /* Write the command to the esp8266; strlen means no null-term is sent */
-    dlog("Sending command [%s] with length %d\r\n", cmd, strlen(cmd));
     UARTWrite(cmd, strlen(cmd));
 
     /* Loop and save the response in the buffer */
@@ -52,16 +57,24 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
 
         if(UARTAvail() != 0){
             UARTRead(&reply[recvd_chars], 1);
-//            dlog("Got char %d: \'%c\', 0x%x\r\n", recvd_chars, reply[recvd_chars], reply[recvd_chars]);
             recvd_chars++;
         }else
             continue;
        
         /* Check if the byte-stream has terminated successfully */ 
-        if(g_esp8266_ok_str[ok_char_index] == reply[recvd_chars-1]){
-            dlog("%c == %c\r\n", g_esp8266_ok_str[ok_char_index], reply[recvd_chars-1]);
-            ok_char_index++; 
+        if(reply[recvd_chars-1] == g_esp8266_ok_str[ok_char_index]){
 
+            /* Ensure a proper match against the termination sequence by comparing the previous bytes */
+            int i; 
+            for(i=0; i<ok_char_index; i++){
+                if(reply[recvd_chars-1-i] == g_esp8266_ok_str[ok_char_index-i])
+                    continue;
+                else
+                    ok_char_index = 0; 
+            }
+
+
+            ok_char_index++; 
             /* A true evaluation means we matched the entire termination string; exit */
             if(sizeof(g_esp8266_ok_str)/sizeof(char) == ok_char_index){
                 reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
@@ -71,10 +84,17 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
         }
 
         /* Check if the byte-stream has terminated with error */ 
-        if(g_esp8266_error_str[error_char_index] == reply[recvd_chars-1]){
-            dlog("%c == %c\r\n", g_esp8266_error_str[error_char_index], reply[recvd_chars-1]);
-            error_char_index++; 
+        if(reply[recvd_chars-1] == g_esp8266_error_str[error_char_index]){
 
+            int i; 
+            for(i=0; i<error_char_index; i++){
+                if(reply[recvd_chars-1-i] == g_esp8266_error_str[error_char_index-i])
+                    continue;
+                else
+                    error_char_index = 0; 
+            }
+
+            error_char_index++; 
             /* A true evaluation means we matched the entire termination string; exit */
             if(sizeof(g_esp8266_error_str)/sizeof(char) == error_char_index){
                 reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
@@ -82,11 +102,55 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
                 break;
             }
         }
-        
-        /* Do the same as above but check for ERROR? First to complete is representative of state? */
     }
 
-    dlog("\nRecv'd %d bytes; ret=%d; oci=%d; eci=%d\r\n", recvd_chars, ret, ok_char_index, error_char_index);
+#ifdef ESP8266_DEBUG
+    dlog("\n[db] Recv'd %d bytes; ret=%d; oci=%d; eci=%d\r\n", recvd_chars, ret, ok_char_index, error_char_index);
+#endif
+
     UARTAssignActiveUART(uart_prior);           
     return ret;
 } 
+
+
+
+int esp8266_is_up(void){
+   /* Delay and send "AT" command -- look for reply */ 
+
+    return 1;
+}
+
+
+
+
+int esp8266_get_version_info(char *reply, size_t len){
+    char buf[256] = {0};
+    char *version_ptr, *reply_buf = reply;  
+
+    /* Sanity check */
+    if(NULL == reply)
+        return -1; 
+    
+    /*
+     * Issue the command; use -1 bytes for simplicity in use of strstr and its associated
+     * null-terminated requirements
+     */
+    if(-1 == esp8266_do_cmd(CMD_GET_VERSION_INFO, buf, sizeof(buf)-1))
+        return -1; 
+    
+    version_ptr = strstr(buf, "SDK version:");
+    if(NULL == version_ptr)
+        return -1; 
+
+    /* Advance the pointer to the start of the actual version number */
+    version_ptr += sizeof("SDK version:")-1; 
+
+    /* Copy the contents of the version string into the reply buffer until \r\n */
+    while(*version_ptr != '\r'){
+        *(reply_buf++) = *(version_ptr++);
+    }
+    
+    /* Properly terminate */ 
+    *(reply_buf++) = '\0';
+    return (reply_buf - reply); 
+}
