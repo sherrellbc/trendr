@@ -38,7 +38,8 @@ int main(void){
     int recvd_chars, nbytes;
     
     /* Init system */
-    sys_init();
+    logging_init();
+    bsp_init();
 
     /* Provide version information, esp8266 info, etc */
     report_prelude();

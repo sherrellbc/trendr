@@ -6,6 +6,13 @@
 #include "stdarg.h"
 
 #define DEBUG_UART_CHANNEL      0
+#define DEBUG_UART_BAUD_RATE    115200
+
+
+
+void logging_init(void){
+    UARTInit(DEBUG_UART_CHANNEL, DEBUG_UART_BAUD_RATE);    
+}
 
 
 

@@ -4,6 +4,9 @@
 #include "stddef.h"
 
 
+
+void logging_init(void);
+
 /* Print a character and hex value to the DEBUG serial interface
  * 
  * @param c : The character to print

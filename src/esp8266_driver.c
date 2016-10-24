@@ -4,12 +4,13 @@
 #include "util.h"
 #include "delay.h"
 #include "logging.h"
+#include "esp8266_driver.h"
 
 #define ESP8266_UART_CHANNEL    1 
 #define ESP8266_UART_BAUD_RATE  115200
 
 /* ESP8266 Command Set */
-#define CMD_GET_VERSION_INFO   "AT+GMR\r\n"
+#define CMD_GET_VERSION_INFO    "AT+GMR\r\n"
 #define CMD_CIPSTATUS           "AT+CIPSTATUS\r\n"
 #define CMD_LIST_APS            "AT+CWLAP\r\n"
 #define CMD_AT_TEST             "AT\r\n"
@@ -24,8 +25,80 @@ static const char g_esp8266_error_str[] = {'E', 'R', 'R', 'O', 'R', '\r', '\n'};
 
 
 
+/* 
+ * Instruct the echo mode of the esp8266 module
+ *
+ * @param mode : 0 off, 1 on
+ *
+ * @return : -1 on failure
+ */
+int esp8266_set_echo(int mode){
+    char reply[64];
+    int ret; 
+   
+    if(0 == mode)
+        ret = esp8266_do_cmd(CMD_AT_ECHO_OFF, reply, sizeof(reply));
+    else
+        ret = esp8266_do_cmd(CMD_AT_ECHO_ON, reply, sizeof(reply));
+    
+    dlog("Returning\r\n");
+    return ret; 
+}
+
+
+
+int esp8266_is_up(void){
+   /* Delay and send "AT" command -- look for reply */ 
+
+    return 1;
+}
+
+
+
+int esp8266_get_version_info(char *reply, size_t len){
+    char buf[256] = {0};
+    char *version_ptr, *reply_buf = reply;  
+
+    /* Sanity check */
+    if(NULL == reply)
+        return -1; 
+    
+    /*
+     * Issue the command; use -1 bytes for simplicity in use of strstr and its associated
+     * null-terminated requirements
+     */
+    if(-1 == esp8266_do_cmd(CMD_GET_VERSION_INFO, buf, sizeof(buf)-1))
+        return -1; 
+    
+    version_ptr = strstr(buf, "SDK version:");
+    if(NULL == version_ptr)
+        return -1; 
+
+    /* Advance the pointer to the start of the actual version number */
+    version_ptr += sizeof("SDK version:")-1; 
+
+    /* Copy the contents of the version string into the reply buffer until \r\n */
+    while(*version_ptr != '\r'){
+        *(reply_buf++) = *(version_ptr++);
+    }
+    
+    /* Properly terminate */ 
+    *(reply_buf++) = '\0';
+    return (reply_buf - reply); 
+}
+
+
+
 void esp8266_init(void){
+    int uart_prior; 
+
+    uart_prior = UARTAssignActiveUART(ESP8266_UART_CHANNEL);
     UARTInit(ESP8266_UART_CHANNEL, ESP8266_UART_BAUD_RATE);
+    
+    //while device is not up, wait for some delayed time
+    esp8266_set_echo(0); //FIXME: Why does echo disable here break the cli? 
+
+    UARTAssignActiveUART(uart_prior);
 }
 
 
@@ -114,43 +187,3 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
 
 
 
-int esp8266_is_up(void){
-   /* Delay and send "AT" command -- look for reply */ 
-
-    return 1;
-}
-
-
-
-
-int esp8266_get_version_info(char *reply, size_t len){
-    char buf[256] = {0};
-    char *version_ptr, *reply_buf = reply;  
-
-    /* Sanity check */
-    if(NULL == reply)
-        return -1; 
-    
-    /*
-     * Issue the command; use -1 bytes for simplicity in use of strstr and its associated
-     * null-terminated requirements
-     */
-    if(-1 == esp8266_do_cmd(CMD_GET_VERSION_INFO, buf, sizeof(buf)-1))
-        return -1; 
-    
-    version_ptr = strstr(buf, "SDK version:");
-    if(NULL == version_ptr)
-        return -1; 
-
-    /* Advance the pointer to the start of the actual version number */
-    version_ptr += sizeof("SDK version:")-1; 
-
-    /* Copy the contents of the version string into the reply buffer until \r\n */
-    while(*version_ptr != '\r'){
-        *(reply_buf++) = *(version_ptr++);
-    }
-    
-    /* Properly terminate */ 
-    *(reply_buf++) = '\0';
-    return (reply_buf - reply); 
-}

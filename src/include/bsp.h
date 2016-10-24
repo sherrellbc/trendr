@@ -10,7 +10,7 @@
 /*
  * Initialize system peripherals, LEDs, etc
  */
-void sys_init(void);
+void bsp_init(void);
 
 
 

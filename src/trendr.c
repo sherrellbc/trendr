@@ -15,7 +15,8 @@ int main(void){
     char buf[1024]; 
     int recvd_chars;
 
-    sys_init(); 
+    bsp_init(); 
+    logging_init();
     dlog("Beginning comms\r\n");
 
     while(1){
