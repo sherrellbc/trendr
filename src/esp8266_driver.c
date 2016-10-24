@@ -34,12 +34,13 @@ static const char g_esp8266_error_str[] = {'E', 'R', 'R', 'O', 'R', '\r', '\n'};
  */
 int esp8266_set_echo(int mode){
     char reply[64];
+    int nbytes;
     int ret; 
    
     if(0 == mode)
-        ret = esp8266_do_cmd(CMD_AT_ECHO_OFF, reply, sizeof(reply));
+        ret = esp8266_do_cmd(CMD_AT_ECHO_OFF, reply, sizeof(reply), &nbytes);
     else
-        ret = esp8266_do_cmd(CMD_AT_ECHO_ON, reply, sizeof(reply));
+        ret = esp8266_do_cmd(CMD_AT_ECHO_ON, reply, sizeof(reply), &nbytes);
     
     dlog("Returning\r\n");
     return ret; 
@@ -58,6 +59,7 @@ int esp8266_is_up(void){
 int esp8266_get_version_info(char *reply, size_t len){
     char buf[256] = {0};
     char *version_ptr, *reply_buf = reply;  
+    int nbytes; 
 
     /* Sanity check */
     if(NULL == reply)
@@ -67,7 +69,7 @@ int esp8266_get_version_info(char *reply, size_t len){
      * Issue the command; use -1 bytes for simplicity in use of strstr and its associated
      * null-terminated requirements
      */
-    if(-1 == esp8266_do_cmd(CMD_GET_VERSION_INFO, buf, sizeof(buf)-1))
+    if(-1 == esp8266_do_cmd(CMD_GET_VERSION_INFO, buf, sizeof(buf)-1, &nbytes))
         return -1; 
     
     version_ptr = strstr(buf, "SDK version:");
@@ -95,16 +97,34 @@ void esp8266_init(void){
     uart_prior = UARTAssignActiveUART(ESP8266_UART_CHANNEL);
     UARTInit(ESP8266_UART_CHANNEL, ESP8266_UART_BAUD_RATE);
     
-    //while device is not up, wait for some delayed time
-    esp8266_set_echo(0); //FIXME: Why does echo disable here break the cli? 
+    //while !esp8266_is_up
+
+    esp8266_set_echo(0); 
 
     UARTAssignActiveUART(uart_prior);
 }
 
 
 
+int esp8266_get_avail_aps(struct access_point_node **node_list, int num_aps){
+    char buf[1024];
+    int nbytes; 
+
+    if(-1 == esp8266_do_cmd(CMD_LIST_APS, buf, sizeof(buf), &nbytes))
+        return -1; 
+
+    return 0; 
+}
+
+
+///* Find "OK\r\n" and effectively remove it from the response buffer */
+//resp_ptr = strstr(reply, "\r\nOK\r\n");//(char*) g_esp8266_ok_str); //FIXME -- why does this not work?
+//if(NULL != resp_ptr)
+//   *resp_ptr = '\0';
+
+
 //TODO: If recv'd chars > len then we never get recv "OK"
-int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
+int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_len){
     size_t recvd_chars = 0;
     int uart_prior, ret = -1; 
     int ok_char_index = 0;
@@ -112,7 +132,7 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
 
     /* Sanity check */
     if(NULL == reply)
-        return -1; 
+        return -1;
 
 #ifdef ESP8266_DEBUG
     dlog("[db] Sending command [%s]\r\n\n", cmd);
@@ -151,7 +171,8 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
             /* A true evaluation means we matched the entire termination string; exit */
             if(sizeof(g_esp8266_ok_str)/sizeof(char) == ok_char_index){
                 reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
-                ret = recvd_chars; 
+                *reply_len = recvd_chars; 
+                ret = 0;
                 break;
             }
         }
@@ -171,7 +192,8 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
             /* A true evaluation means we matched the entire termination string; exit */
             if(sizeof(g_esp8266_error_str)/sizeof(char) == error_char_index){
                 reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
-                ret = recvd_chars;
+                *reply_len = recvd_chars;
+                ret = -1; 
                 break;
             }
         }
@@ -184,6 +206,3 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len){
     UARTAssignActiveUART(uart_prior);           
     return ret;
 } 
-
-
-

@@ -18,10 +18,10 @@
 
 
 void report_prelude(void){
-    char version_buf[64]; 
+    char version_buf[64];
 
     /* Collect data on the connected esp8266 */
-    if(-1 == esp8266_get_version_info(version_buf, sizeof(version_buf)/sizeof(char))){
+    if(-1 == esp8266_get_version_info(version_buf, sizeof(version_buf))){
         dlog("Error getting version information from ESP8266\r\n");
         return; 
     }
@@ -48,12 +48,6 @@ int main(void){
         recvd_chars = 0; 
         dputs(CLI_PROMPT);
         
-        /* Clear buffers before receiving data */
-        memset(cmd_buf, '\0', sizeof(cmd_buf));
-        memset(resp_buf, '\0', sizeof(resp_buf));
-        //*cmd_buf = '\0';
-        //*resp_buf = '\0';
-
         /* Read from input until RETURN (0x0D) */
         while(1){
             
@@ -73,10 +67,9 @@ int main(void){
                 if('\r' == cmd_buf[recvd_chars-1]){ //FIXME: Bounds checking
                     dputs("\n");
                     cmd_buf[recvd_chars++] = '\n';
-//                    cmd_buf[recvd_chars++] = '\0';
+                    cmd_buf[recvd_chars++] = '\0';  /* So we can determine length */
 
-                    nbytes = esp8266_do_cmd(cmd_buf, resp_buf, sizeof(resp_buf));
-                    if(-1 == nbytes){
+                    if(-1 == esp8266_do_cmd(cmd_buf, resp_buf, sizeof(resp_buf), &nbytes)){
                         dlog("Command [%s] not sent\r\n", cmd_buf);
                         break; 
                     }
