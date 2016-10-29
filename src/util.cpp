@@ -2,6 +2,9 @@
 #include <string.h>
 #include "stdarg.h"
 #include "util.h"
+#include "logging.h"
+#include "i2c_t3.h"
+
 
 
 /* Needs some serious optimization */
@@ -14,3 +17,16 @@ void buf_fill(uint8_t *buf, char *watermark, size_t wm_len, size_t dest_len){
         index += wm_len; 
     }
 }
+
+
+
+int i2c_addr_stat(uint8_t addr){
+    Wire.beginTransmission(addr);
+    Wire.endTransmission();
+    return Wire.getError()?(-1):(0);
+}
+
+
+
+
+

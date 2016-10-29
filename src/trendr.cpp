@@ -35,10 +35,7 @@ void i2c_scan(void){
     int i; 
 
     for(i=1; i<127; i++){
-        Wire.beginTransmission(i);
-        Wire.endTransmission();
-
-        if(0 == Wire.getError())
+        if(0 == i2c_addr_stat(i))
             dlog("Found i2c addr: 0x%.2x\r\n", i);
     }
 }
