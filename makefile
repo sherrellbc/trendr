@@ -92,17 +92,10 @@ SOURCES :=  $(C_FILES:.c=.o) \
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
 all: $(OBJS) cli-strip hex
-
-cli-strip:
-	$(STRIP) --strip-symbol main $(BUILDDIR)/src/cli.o
-
 build: $(TARGET).elf
-
 hex: $(TARGET).hex
-
-cli: $(OBJS) targ-strip hex
-targ-strip:
-	$(STRIP) --strip-symbol main $(BUILDDIR)/src/trendr.o
+install: do_proj post_compile reboot
+install-cli: do_cli post_compile reboot
 
 post_compile: $(TARGET).hex
 	@$(abspath $(TOOLSPATH))/teensy_post_compile -file="$(basename $<)" -path=$(CURDIR) -tools="$(abspath $(TOOLSPATH))"
@@ -110,13 +103,16 @@ post_compile: $(TARGET).hex
 reboot:
 	@-$(abspath $(TOOLSPATH))/teensy_reboot
 
-upload: hex post_compile reboot
-	
-install: hex post_compile reboot
-#	@-$(abspath $(TOOLSPATH))/teensy_loader_cli --mcu=mk20dx256 -vw $(TARGET).hex
+# Build the main target firmware
+do_proj: $(OBJS) cli-strip hex 
+cli-strip:
+	$(STRIP) --strip-symbol main $(BUILDDIR)/src/cli.o
 
-install-cli : cli
-	@-$(abspath $(TOOLSPATH))/teensy_loader_cli --mcu=mk20dx256 -vw cli.hex
+# Build the CLI firmware
+do_cli: $(OBJS) targ-strip hex
+targ-strip:
+	$(STRIP) --strip-symbol main $(BUILDDIR)/src/trendr.o
+
 
 $(BUILDDIR)/%.o: %.c
 	@echo "[CC]\t$<"
