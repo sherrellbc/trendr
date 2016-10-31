@@ -36,7 +36,7 @@ void i2c_scan(void){
 
     for(i=1; i<127; i++){
         if(0 == i2c_addr_stat(i))
-            dlog("Found i2c addr: 0x%.2x\r\n", i);
+            dlog("Found i2c addr: 0x%.2x[%d]\r\n", i, i);
     }
 }
 
@@ -45,17 +45,15 @@ void i2c_scan(void){
 int main(void){
     /* Init system */
     logging_init();
-    bsp_init();
-
     Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
     Wire.setDefaultTimeout(200000); 
-  
+    bsp_init();
+
     /* Provide version information, esp8266 info, etc */
     report_prelude();
 
     while(1){
         delay_us(1000*1000);
-        i2c_scan();
 
         /* Send command to module and print response */
         dlog("\n\n= = = = = = = = = = = = = = = = = = = =\r\n");
