@@ -45,7 +45,7 @@ int main(void){
     
     /* Init system */
     logging_init();
-    bsp_init();
+    esp8266_init(); /* Nominally in bsp.c, but we do not need the eeprom/i2c dependency */
 
     /* Provide version information, esp8266 info, etc */
     report_prelude();
