@@ -59,10 +59,15 @@ int main(void){
         delay_us(1000*1000);
         memset(buf, 0, sizeof(buf));
 
-        at24cx_read(0x0000, buf, 8);
-        dlog("Found: %s\r\n", itohs(buf, 8));
+        if(-1 == at24cx_read(0x0300, buf, 64))
+            dlog("Read failed\r\n");
+        else{
+            dlog("Found: 0x%s\r\n", itohs(buf,8));
+            dlog("String: %s\r\n", buf);
+        }
 
-        at24cx_write(0x0000, (uint8_t *) "DEADBEEF", 8);
+        if(-1 == at24cx_write(0x0300, (uint8_t *) "Test string", sizeof("Test string")))
+            dlog("Write failed\r\n");
     }
 
 	return 0; 

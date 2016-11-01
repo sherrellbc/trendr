@@ -51,22 +51,25 @@ int at24cx_init(){
 
 
 int at24cx_write(uint16_t addr, uint8_t *buf, int count){
-//    int i;
-//
-//    if(0 != at24cx_set_addr_register(addr))
-//        return -1; 
-//
-//    /* Loop and read "count" bytes of data */
-//    Wire.beginTransmission(AT24CX_I2C_ADDR);
-//    for(i=0; i<count; i++)
-//        Wire.write(buf[i]);
-//    Wire.sendTransmission();
-//
-//    /* Check for error */
-//    if(0 != Wire.getError()){
-//        g_err_code = AT24CX_NO_RESPONSE; 
-//        return -1;  
-//    }
+    int i;
+
+    //if(0 != at24cx_set_addr_register(addr))
+    //    return -1; 
+
+    /* Loop and read "count" bytes of data */
+    Wire.beginTransmission(AT24CX_I2C_ADDR);
+
+    Wire.send( (uint8_t) ((addr>>8) & 0x00FF) );
+    Wire.send( (uint8_t) (addr & 0x00FF) );
+
+    Wire.write(buf, count); 
+    Wire.endTransmission();
+
+    /* Check for error */
+    if(0 != Wire.getError()){
+        g_err_code = AT24CX_NO_RESPONSE; 
+        return -1;  
+    }
 
     return 0; 
 } 
@@ -80,10 +83,11 @@ int at24cx_read(uint16_t addr, uint8_t *buf, int count){
         return -1; 
 
     /* Loop and read "count" bytes of data */
-    Wire.beginTransmission(AT24CX_I2C_ADDR);
+    if(count != (int) Wire.requestFrom(AT24CX_I2C_ADDR, count))
+        return -1; 
+
     for(i=0; i<count; i++)
         buf[i] = Wire.read();
-    Wire.sendTransmission();
 
     /* Check for error */
     if(0 != Wire.getError()){
