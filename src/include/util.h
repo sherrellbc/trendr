@@ -28,6 +28,21 @@ void buf_fill(uint8_t *buf, char *watermark, size_t wm_len, size_t dest_len);
  */
 int i2c_addr_stat(uint8_t addr);
 
+
+
+/* 
+ * Supports printing up to a 256 bit/32 byte unsigned int
+ *
+ * @param buf : The buffer containing the unsigned inti
+ * @param len : Length of buf in bytes
+ * 
+ * @return    : Pointer to static buffer with corresponding hex string
+ */
+
+char *itohs(const uint8_t * const buf, const unsigned int len);
+
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -6,6 +6,7 @@
 #include "logging.h"
 #include "delay.h"
 #include "esp8266_driver.h"
+#include "at24cx.h"
 #include "util.h"
 
 #define APP_VERSION "1.0"
@@ -43,6 +44,8 @@ void i2c_scan(void){
 
 
 int main(void){
+    uint8_t buf[256]; 
+    
     /* Init system */
     logging_init();
     Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
@@ -54,9 +57,12 @@ int main(void){
 
     while(1){
         delay_us(1000*1000);
+        memset(buf, 0, sizeof(buf));
 
-        /* Send command to module and print response */
-        dlog("\n\n= = = = = = = = = = = = = = = = = = = =\r\n");
+        at24cx_read(0x0000, buf, 8);
+        dlog("Found: %s\r\n", itohs(buf, 8));
+
+        at24cx_write(0x0000, (uint8_t *) "DEADBEEF", 8);
     }
 
 	return 0; 
