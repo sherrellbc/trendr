@@ -17,12 +17,31 @@
 #define CMD_AT_ECHO_ON          "ATE1\r\n"
 #define CMD_GET_UART_CFG        "AT+UART_CUR\r\n"
 
+/* Structure representing a terminating string mode for the esp8266 */
+struct term_str{
+    const char* str;
+    int len; 
+};
 
-/* Buffer containing the expected stopping sequences for success and error, respectively */ 
-static const char g_esp8266_ok_str[] = {'O', 'K', '\r', '\n'}; 
-static const char g_esp8266_error_str[] = {'E', 'R', 'R', 'O', 'R', '\r', '\n'}; 
+/* Structure containing various stopping sequences */ 
+struct term_str g_term_str_array[] =    {
+                                            {
+                                                .str = "OK\r\n",
+                                                .len = sizeof("OK\r\n")-1,
+                                            },
+                                            
+                                            {
+                                                .str = "ERROR\r\n",
+                                                .len = sizeof("ERROR\r\n")-1,
+                                            },
 
-
+                                            {
+                                                .str = "FAIL\r\n",
+                                                .len = sizeof("FAIL\r\n")-1,
+                                            },                               
+                                        };
+                                     
+ 
 /* Pointer to implementation specific to the current configuration */
 static void (*if_write)(const void *, unsigned int) = NULL;
 static int (*if_read)(void) = NULL;
@@ -123,18 +142,13 @@ int esp8266_get_avail_aps(struct access_point_node **node_list, int num_aps){
 }
 
 
-///* Find "OK\r\n" and effectively remove it from the response buffer */
-//resp_ptr = strstr(reply, "\r\nOK\r\n");//(char*) g_esp8266_ok_str); //FIXME -- why does this not work?
-//if(NULL != resp_ptr)
-//   *resp_ptr = '\0';
-
 
 //TODO: If recv'd chars > len then we never get recv "OK"
 int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_len){
     size_t recvd_chars = 0;
+    int term_str_idx[sizeof(g_term_str_array)/sizeof(struct term_str)] = {0}; 
     int ret = -1; 
-    int ok_char_index = 0;
-    int error_char_index = 0;
+    int i,j;
 
     /* Sanity check */
     if(NULL == reply)
@@ -156,52 +170,32 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_l
             recvd_chars++;
         }else
             continue;
-       
-        /* Check if the byte-stream has terminated successfully */ 
-        if(reply[recvd_chars-1] == g_esp8266_ok_str[ok_char_index]){
 
-            /* Ensure a proper match against the termination sequence by comparing the previous bytes */
-            int i; 
-            for(i=0; i<ok_char_index; i++){
-                if(reply[recvd_chars-1-i] == g_esp8266_ok_str[ok_char_index-i])
-                    continue;
-                else
-                    ok_char_index = 0; 
-            }
+        /* Check each of the possible termination strings for a match */
+        for(i=0; i<sizeof(g_term_str_array)/sizeof(struct term_str); i++){
+            if(reply[recvd_chars-1] == g_term_str_array[i].str[term_str_idx[i]]){
 
+                /* Ensure a proper match against the termination sequence by comparing the previous bytes */
+                for(j=0; j<term_str_idx[i]; j++){
+                    if(reply[recvd_chars-1-j] == g_term_str_array[i].str[term_str_idx[i]-j])
+                        continue;
+                    else
+                        term_str_idx[i] = 0; 
+                }
 
-            ok_char_index++; 
-            /* A true evaluation means we matched the entire termination string; exit */
-            if(sizeof(g_esp8266_ok_str)/sizeof(char) == ok_char_index){
-                reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
-                *reply_len = recvd_chars; 
-                ret = 0;
-                break;
-            }
-        }
-
-        /* Check if the byte-stream has terminated with error */ 
-        if(reply[recvd_chars-1] == g_esp8266_error_str[error_char_index]){
-
-            int i; 
-            for(i=0; i<error_char_index; i++){
-                if(reply[recvd_chars-1-i] == g_esp8266_error_str[error_char_index-i])
-                    continue;
-                else
-                    error_char_index = 0; 
-            }
-
-            error_char_index++; 
-            /* A true evaluation means we matched the entire termination string; exit */
-            if(sizeof(g_esp8266_error_str)/sizeof(char) == error_char_index){
-                reply[recvd_chars] = '\0';          //FIXME: Consider bounds as to not write outside them here
-                *reply_len = recvd_chars;
-                ret = -1; 
-                break;
+                term_str_idx[i]++; //TODO: validation check for this statement 
+                /* A true evaluation means we matched the entire termination string; exit */
+                if(g_term_str_array[i].len == term_str_idx[i]){
+                    reply[recvd_chars] = '\0';          //fixme: consider bounds as to not write outside them here
+                    *reply_len = recvd_chars; 
+                    ret = 0;
+                    goto done;
+                }
             }
         }
     }
 
+done:
 #ifdef ESP8266_DEBUG
     dlog("\n[db] Recv'd %d bytes; ret=%d; oci=%d; eci=%d\r\n", recvd_chars, ret, ok_char_index, error_char_index);
 #endif

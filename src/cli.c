@@ -76,8 +76,8 @@ int main(void){
                     cmd_buf[recvd_chars++] = '\0';  /* So we can determine length */
 
                     if(-1 == esp8266_do_cmd(cmd_buf, resp_buf, sizeof(resp_buf), &nbytes)){
-                        dlog("Command [%s] not sent\r\n", cmd_buf);
-                        break; 
+//                        dlog("Command [%s] not sent\r\n", cmd_buf);
+//                        break; 
                     }
                         
                     resp_buf[nbytes-1] = '\0';
