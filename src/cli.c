@@ -66,6 +66,8 @@ int main(void){
             if(if_avail() != 0){
                 cmd_buf[recvd_chars] = if_read(); 
                 if_putc(cmd_buf[recvd_chars]);
+    
+                //TODO: Fix .. toupper breaks certain commands (like APs with pwds)
                 cmd_buf[recvd_chars] = (char)toupper((int)cmd_buf[recvd_chars]);
                 recvd_chars++;
                 

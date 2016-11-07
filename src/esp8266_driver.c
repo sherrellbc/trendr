@@ -17,6 +17,11 @@
 #define CMD_AT_ECHO_ON          "ATE1\r\n"
 #define CMD_GET_UART_CFG        "AT+UART_CUR\r\n"
 
+#define CMD_GET_IP              "AT+CIFSR\r\n"
+#define CMD_JOIN_AP             "AT+CWJAP"
+#define CMD_QUIT_AP             "AT+CWQAP\r\n"
+
+
 /* Structure representing a terminating string mode for the esp8266 */
 struct term_str{
     const char* str;
@@ -131,7 +136,7 @@ void esp8266_init(void){
 
 
 
-int esp8266_get_avail_aps(struct access_point_node **node_list, int num_aps){
+int esp8266_get_avail_aps(struct ap_node **node_list, int num_aps){
     char buf[1024];
     int nbytes; 
 
@@ -140,6 +145,54 @@ int esp8266_get_avail_aps(struct access_point_node **node_list, int num_aps){
 
     return 0; 
 }
+
+
+
+int esp8266_ap_connect(struct ap_node *node){
+    char cmd_buf[256]; 
+    char reply[128]; 
+    int len;  
+    int reply_len; 
+
+    //TODO: Bounds checkiung
+    len = sprintf(cmd_buf, CMD_JOIN_AP"=\"%s\",\"%s\"\r\n", node->ssid, node->passwd);
+    if(-1 == esp8266_do_cmd((const char * const) cmd_buf, reply, sizeof(reply), &reply_len))
+        return -1; 
+
+    /* Check for error */
+    if(NULL == strstr(reply, "CONNECTED"))
+        return -1;
+
+#ifdef ESP8266_DEBUG                                    
+    dlog("[db] Connected to AP=\"%s\"; IP acquired", node->ssid);
+#endif
+    return 0; 
+}
+
+
+
+int esp8266_ap_disconnect(void){
+    char reply[128]; 
+    int reply_len; 
+
+    //TODO: Bounds checkiung
+    if(-1 == esp8266_do_cmd(CMD_QUIT_AP, reply, sizeof(reply), &reply_len))
+        return -1; 
+
+    /* Check for error */
+    if(NULL != strstr(reply, "ERROR"))
+        return -1;
+
+ #ifdef ESP8266_DEBUG                                    
+    dlog("[db] Disconnected from AP\r\n");
+ #endif
+    return 0; 
+}
+
+
+
+int esp8266_get_ip(char *reply, size_t len){
+} 
 
 
 
@@ -163,6 +216,7 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_l
 
     /* Loop and save the response in the buffer */
     //TODO: Implement timeout
+    //TODO: Failsafe: if module sends > len then truncate and spin on incoming data 
     while(recvd_chars < len-1){
 
         if(if_avail() != 0){
@@ -197,7 +251,7 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_l
 
 done:
 #ifdef ESP8266_DEBUG
-    dlog("\n[db] Recv'd %d bytes; ret=%d; oci=%d; eci=%d\r\n", recvd_chars, ret, ok_char_index, error_char_index);
+    dlog("\n[db] Recv'd %d bytes; ret=%d; oci=%d; eci=%d; fci=%d\r\n", recvd_chars, ret, term_str_idx[0], term_str_idx[1], term_str_idx[2]);
 #endif
     return ret;
 } 

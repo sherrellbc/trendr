@@ -18,13 +18,16 @@ enum encryption_mode {
 
 
 /* Definition of AP meta-data structure */
-struct access_point_node{
+struct ap_node{
     enum encryption_mode enc_mode; 
-    char ssid[64]; 
+    char ssid[64];
     int rssi; 
     char mac[11];
     unsigned int channel; 
     int freq_offset;
+    
+    /* Used when connecting */
+    char passwd[64];  
 };
 
 
@@ -59,6 +62,29 @@ int esp8266_do_cmd(char const * const cmd, char *reply, size_t len, int *reply_l
  * @return      : -1 on failure
  */
 int esp8266_get_version_info(char *reply, size_t len);
+
+
+
+/*
+ * Join an access point defined by "node"
+ *
+ * @param node  : A structure defining the node to connect to (need only ssid and passwd)
+ *
+ * @return      : -1 on failure
+ */
+int esp8266_ap_connect(struct ap_node *node);
+
+
+
+/*
+ * Disconnect from the currently associated access point (if any)
+ * 
+ * @return  : -1 on error
+*/
+int esp8266_ap_disconnect(void);
+
+
+
 #ifdef __cplusplus
 }
 #endif
