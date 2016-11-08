@@ -66,9 +66,6 @@ int main(void){
             if(if_avail() != 0){
                 cmd_buf[recvd_chars] = if_read(); 
                 if_putc(cmd_buf[recvd_chars]);
-    
-                //TODO: Fix .. toupper breaks certain commands (like APs with pwds)
-                cmd_buf[recvd_chars] = (char)toupper((int)cmd_buf[recvd_chars]);
                 recvd_chars++;
                 
                 /* User pressed RETURN */
@@ -78,8 +75,8 @@ int main(void){
                     cmd_buf[recvd_chars++] = '\0';  /* So we can determine length */
 
                     if(-1 == esp8266_do_cmd(cmd_buf, resp_buf, sizeof(resp_buf), &nbytes)){
-//                        dlog("Command [%s] not sent\r\n", cmd_buf);
-//                        break; 
+                        dlog("An error occurred while sending [%s]\r\n", cmd_buf);
+                        break; 
                     }
                         
                     resp_buf[nbytes-1] = '\0';
