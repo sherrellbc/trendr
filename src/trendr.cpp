@@ -8,11 +8,12 @@
 #include "esp8266_driver.h"
 #include "at24cx.h"
 #include "util.h"
+#include "unit_tests.h"
 
 #define APP_VERSION "1.0"
 #define APP_PRELUDE "\r\n\n"                        \
                     "Trendr app\r\n"                \
-                    "Version: " APP_VERSION "\r\n"    \
+                    "Version: " APP_VERSION "\r\n"  \
                     "Build Date: " __DATE__ " " __TIME__ "\r\n"
 
 
@@ -43,31 +44,25 @@ void i2c_scan(void){
 
 
 
+void sys_init(void){
+     Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
+     Wire.setDefaultTimeout(200000);
+}
+
+
+
 int main(void){
-    uint8_t buf[256]; 
-    
     /* Init system */
     logging_init();
-    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
-    Wire.setDefaultTimeout(200000); 
+    sys_init();
     bsp_init();
 
     /* Provide version information, esp8266 info, etc */
     report_prelude();
-
+    
     while(1){
-        delay_us(1000*1000);
-        memset(buf, 0, sizeof(buf));
-
-        if(-1 == at24cx_read(0x0300, buf, 64))
-            dlog("Read failed\r\n");
-        else{
-            dlog("Found: 0x%s\r\n", itohs(buf,8));
-            dlog("String: %s\r\n", buf);
-        }
-
-        if(-1 == at24cx_write(0x0300, (uint8_t *) "Test string", sizeof("Test string")))
-            dlog("Write failed\r\n");
+        dlog("Starting unit tests ..\r\n");
+        do_unit_tests(AP_UTS);
     }
 
 	return 0; 
