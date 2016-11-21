@@ -31,6 +31,13 @@ int i2c_addr_stat(uint8_t addr);
 
 
 /* 
+ * Scan the I2C bus printing out each address found to be valid
+ */
+void i2c_scan(void);
+
+
+
+/* 
  * Supports printing up to a 256 bit/32 byte unsigned int
  *
  * @param buf : The buffer containing the unsigned inti

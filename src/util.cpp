@@ -28,6 +28,17 @@ int i2c_addr_stat(uint8_t addr){
 
 
 
+void i2c_scan(void){
+     int i; 
+ 
+     for(i=1; i<127; i++){
+         if(0 == i2c_addr_stat(i))
+             dlog("Found i2c addr: 0x%.2x[%d]\r\n", i, i);
+     }
+}
+
+
+
 char *itohs(const uint8_t * const buf, const unsigned int len){
     static char res[64 + 1]; /* 64 hex characters + \0 */
     unsigned int i = 0;
@@ -39,6 +50,6 @@ char *itohs(const uint8_t * const buf, const unsigned int len){
     /* Use printf so the identifier for the line is not present for each character */
     for(; i<len; i++)
         sprintf(&res[i*2], "%.2x", buf[i]); /* sprintf adds trailing null-terminator */
-
+    
     return res; 
 }
