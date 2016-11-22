@@ -13,4 +13,5 @@ void do_unit_tests(uint32_t which){
 //    }
 
     ap_connect_ut();
+    screen_ut();
 }

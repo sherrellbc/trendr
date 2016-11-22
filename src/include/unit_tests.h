@@ -35,6 +35,14 @@ int ap_connect_ut(void);
 
 
 
+/*
+ * Write content to the ili9341 display
+ * 
+ * @return  : -1 on failure
+ */
+int screen_ut(void);
+
+
 #ifdef __cplusplus
 }
 #endif
