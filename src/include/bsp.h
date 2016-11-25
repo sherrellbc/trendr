@@ -6,19 +6,11 @@
 
 #define DEBUG_UART_CHANNEL      0
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*
  * Initialize system peripherals, LEDs, etc
  */
 void bsp_init(void);
 
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _BSP_H */
