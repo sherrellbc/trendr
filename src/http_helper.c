@@ -21,9 +21,11 @@ int http_json_get(struct tcp_session *session, char *remote, char *reply, size_t
         return -1; 
     
     if(-1 == esp8266_read(reply, len, replylen, &gjson_termstr))
-        return -1; 
+        return -1;
 
-    dlog("Recv'd %d bytes; %s\r\n", *replylen, reply);
+    /* Lazy checker for now .. check if we did not fail */
+    if(NULL == strstr(reply, "200 OK\r\n"))
+        return -1; 
 
 	return 0;
 }

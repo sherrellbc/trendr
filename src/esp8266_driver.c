@@ -342,6 +342,7 @@ int esp8266_tcp_send(struct tcp_session *session, uint8_t *data, size_t len){
 
 
 
+/* FIXME: This is currently very brittle: Expend term_str to be an array (i.e. success/failure modes */
 int esp8266_read(char *reply, size_t len, int *replylen, const struct term_str *str){
     size_t recvd_chars = 0; 
     int term_str_idx = 0; 
