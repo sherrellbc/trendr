@@ -1,0 +1,9 @@
+[submodule "libraries/i2c_t3"]
+	path = libraries/i2c_t3
+	url = https://github.com/nox771/i2c_t3
+[submodule "libraries/SPI"]
+	path = libraries/SPI
+	url = https://github.com/PaulStoffregen/SPI
+[submodule "libraries/ILI9341_t3"]
+	path = libraries/ILI9341_t3
+	url = https://github.com/PaulStoffregen/ILI9341_t3

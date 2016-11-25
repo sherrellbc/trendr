@@ -1,5 +1,6 @@
-Checkout each submodule independently with "git checkout submodule". Commits known to work
-for this release are show below.
+Checkout each submodule independently with "git submodule update --init --recursive". Commits known to work
+for this release are show below. Otherwise, a modified clone command will do this automatically: 
+    "git clone --recursive trendr" 
 
 i2c_t3: 6767fdcf0f25601f43e78b6ae31d15271cafaf72
 ILI9341_t3: d7b117859d1d908b2ad770178504e8e085c25582
