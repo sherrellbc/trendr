@@ -1,0 +1,6 @@
+Checkout each submodule independently with "git checkout submodule". Commits known to work
+for this release are show below.
+
+i2c_t3: 6767fdcf0f25601f43e78b6ae31d15271cafaf72
+ILI9341_t3: d7b117859d1d908b2ad770178504e8e085c25582
+SPI: d1aff2a45293c7d2414349b4a2888235f3849f82
