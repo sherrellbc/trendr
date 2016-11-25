@@ -5,16 +5,9 @@
 #include <stdint.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 /* Flags representing various modes of unit test */
 #define AP_UTS      0x01
 #define EEPROM_UTS  0x02
-
-
 
 
 /*
@@ -27,6 +20,19 @@ void do_unit_tests(uint32_t which);
 
 
 /*
+ * Write content to the ili9341 display
+ * 
+ * @return  : -1 on failure
+ */
+int screen_ut(void);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/*
  * Connect to an AP for 5 seconds and disconnect
  *
  * @return  : -1 on failure
@@ -34,13 +40,12 @@ void do_unit_tests(uint32_t which);
 int ap_connect_ut(void);
 
 
-
 /*
- * Write content to the ili9341 display
- * 
+ * Perform a read/write/read memory test
+ *
  * @return  : -1 on failure
  */
-int screen_ut(void);
+int mem_ut(void);
 
 
 #ifdef __cplusplus

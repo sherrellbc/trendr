@@ -9,8 +9,8 @@ int ap_connect_ut(void){
     struct ap_node node;
     int ret = 0; 
     
-    memcpy(node.ssid, "FREEAP", sizeof("FREEAP"));
-    memcpy(node.passwd, "SIMPLE11", sizeof("SIMPLE11"));
+    memcpy(node.ssid, TEST_AP_SSID, sizeof(TEST_AP_SSID));
+    memcpy(node.passwd, TEST_AP_PASSWD, sizeof(TEST_AP_PASSWD));
 
     /* Disconnect/wait, Connect/wait, Disconnect/wait */
     if(-1 == esp8266_ap_disconnect()){
