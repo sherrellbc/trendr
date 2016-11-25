@@ -40,7 +40,7 @@ void i2c_scan(void){
 
 
 char *itohs(const uint8_t * const buf, const unsigned int len){
-    static char res[64 + 1]; /* 64 hex characters + \0 */
+    static char res[128 + 1]; /* 64 hex characters + \0 */
     unsigned int i = 0;
 
     /* Sanity check */
