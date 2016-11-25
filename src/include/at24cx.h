@@ -10,6 +10,7 @@ extern "C" {
 
 #define AT24CX_PAGE_SIZE    64
 #define AT24CX_NUM_PAGES    512
+#define AT24CX_MAX_ADDR     0x7FFF /*TODO: Max addr check in functions */
     
 
 /* i2c bus address */

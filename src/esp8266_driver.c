@@ -10,12 +10,6 @@
 #define ESP8266_BAUD_RATE  115200
 
 
-/* Structure representing a terminating string mode for the esp8266 */
-//struct term_str{
-//    const char* str;
-//    int len; 
-//};
-
 /* Structure containing various stopping sequences */ 
 struct term_str g_term_str_array[] =    {
                                             {
@@ -348,7 +342,7 @@ int esp8266_tcp_send(struct tcp_session *session, uint8_t *data, size_t len){
 
 
 
-int esp8266_read(char *reply, size_t len, int *replylen, struct term_str *str){
+int esp8266_read(char *reply, size_t len, int *replylen, const struct term_str *str){
     size_t recvd_chars = 0; 
     int term_str_idx = 0; 
     int i,ret = -1; 
@@ -394,7 +388,7 @@ int esp8266_read(char *reply, size_t len, int *replylen, struct term_str *str){
  #ifdef ESP8266_DEBUG 
      dlog("[db; %s] Recd'd %d bytes; tci=%d\r\n", __FUNCTION__, recvd_chars, term_str_idx);
  #endif
-    return 0;
+    return ret;
 }
 
 

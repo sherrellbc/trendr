@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 /* Define for debug mode */
-#define ESP8266_DEBUG
+//#define ESP8266_DEBUG
 
 
 /* Enum representing the modes of encryption */
@@ -203,7 +203,7 @@ int esp8266_setmode(enum esp_module_mode mode);
  *
  * @return          : -1 on failure
  */
-int esp8266_read(char *reply, size_t len, int *replylen, struct term_str *str);
+int esp8266_read(char *reply, size_t len, int *replylen, const struct term_str *str);
 
 
 
