@@ -10,6 +10,7 @@
 #include "util.h"
 #include "unit_tests.h"
 #include "resources.h"
+#include "display_plot.h"
 
 #define APP_VERSION "1.0"
 #define APP_PRELUDE "\r\n\n"                        \
@@ -34,7 +35,16 @@ static void report_prelude(void){
 
 
 /* FIXME: Currently only valid cases work */
-static const char *stock_list[] = {"TSLA", "HPQ", "FIT", "M", "BAC"};
+static const char *stock_list[] = {"TSLA", "HPQ", "FIT", "M", "BAC", "AAPL"};
+
+/* Fixed values for testing the display plotting function */
+static const float g_point_array[][2] =     {
+                                                {0,  10},
+                                                {10, -25},
+                                                {20, 40},
+                                                {30, 75}
+                                            };
+                                    
 
 
 int main(void){
@@ -67,7 +77,10 @@ int main(void){
     dlog("Connected!\r\n");
 
     if(-1 != esp8266_get_ipv4_addr((uint8_t (*)[4])ipbuf))
-        dlog("Got IP: %d.%d.%d.%d\r\n", ipbuf[0], ipbuf[1], ipbuf[2], ipbuf[3]); 
+        dlog("Got IP: %d.%d.%d.%d\r\n", ipbuf[0], ipbuf[1], ipbuf[2], ipbuf[3]);
+
+    /* Display test */
+    display_draw_plot(g_point_array, sizeof(g_point_array)/sizeof(float)/2);  
 
     while(1){
         for(i=0; i<sizeof(stock_list)/sizeof(char *); i++){

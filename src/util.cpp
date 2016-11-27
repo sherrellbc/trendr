@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "stdarg.h"
+#include <float.h>
+
 #include "util.h"
 #include "logging.h"
 #include "i2c_t3.h"
-
 
 
 /* Needs some serious optimization */
@@ -52,4 +53,30 @@ char *itohs(const uint8_t * const buf, const unsigned int len){
         sprintf(&res[i*2], "%.2x", buf[i]); /* sprintf adds trailing null-terminator */
     
     return res; 
+}
+
+
+
+float find_max_float(const float *arr, int len, int width, int column){
+    int idx;
+    float max = FLT_MIN; 
+
+    for(idx=0; idx<len; idx++)
+        if(*(arr + idx*width + column) > max)
+            max = *(arr + idx*width + column);
+    
+    return max; 
+}
+
+
+
+float find_min_float(const float *arr, int len, int width, int column){
+    int idx;
+    float min = FLT_MAX; 
+   
+    for(idx=0; idx<len; idx++)
+        if(*(arr + idx*width + column) < min)
+            min = *(arr + idx*width + column);
+    
+    return min; 
 }

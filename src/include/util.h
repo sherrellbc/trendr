@@ -50,6 +50,34 @@ char *itohs(const uint8_t * const buf, const unsigned int len);
 
 
 
+/*
+ * Find the maximum float value in an array
+ *
+ * @param arr       : The array of floats
+ * @param len       : Number of rows in the array
+ * @param width     : Number of columns
+ * @param column    : Target column to search of max value
+ *
+ * @return          : The max value found in the array 
+ */
+float find_max_float(const float *arr, int len, int width, int column);
+
+
+
+/*
+ * Find the minimum float value in an array
+ *
+ * @param arr       : The array of floats
+ * @param len       : Number of rows in the array
+ * @param width     : Number of columns
+ * @param column    : Target column to search of min value
+ *
+ * @return          : The min value found in the array 
+ */
+float find_min_float(const float *arr, int len, int width, int column);
+
+
+
 #ifdef __cplusplus
 }
 #endif
