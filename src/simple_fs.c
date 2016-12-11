@@ -31,21 +31,29 @@ int sfs_get_superblock(struct super_block_t *sb){
 
     /* Read in magic number and block count first; magic is checked to ensure lb_count is valid data before use */
     at24cx_read((uint16_t)SUPER_BLOCK_LOC, (uint8_t *)sb, sizeof(struct super_block_t));
+#ifdef SFS_DEBUG
     dlog("Search for superblock returned magic: 0x%s\r\n", itohs((uint8_t*)&sb->magic, sizeof(((struct super_block_t *)0)->magic))); 
+#endif
     
     /* If the expected magic number was at the address, we assume the superblock is present */
     if(0 == memcmp(&(sb->magic), &(g_sb.magic), sizeof(((struct super_block_t *)0)->magic))){
+#ifdef SFS_DEBUG
         dlog("MAGIC matched!\r\n");
+#endif
         return 0;  
     }else{
+#ifdef SFS_DEBUG
         dlog("Initializing superblock at location: %p\r\n", SUPER_BLOCK_LOC);
+#endif
 
         /* Save the new superblock to memory so next boot we know data is stored in memory */
         at24cx_write((uint16_t)SUPER_BLOCK_LOC, (uint8_t *)&g_sb, sizeof(struct super_block_t));
 
         /* Update the appropriate pages to indicate a new, empty data set */
         for(i=0; i<g_sb.lb_count; i++){
+#ifdef SFS_DEBUG
             dlog("Initializing local_block at %p\r\n", g_sb.locs[i]);
+#endif
             at24cx_write((uint16_t)g_sb.locs[i], (uint8_t *)&g_lb, sizeof(struct local_block_t));
         }
         
@@ -73,7 +81,7 @@ int sfs_load(enum trend_data dataset, uint8_t *buf, unsigned int len, unsigned i
 
     /* It fits; Read the contents of memory into the passed buffer */
     at24cx_read(sb.locs[dataset] +  sizeof(((struct local_block_t *)0)->obj_size) +
-                                    sizeof(((struct local_block_t *)0)->len), buf, lb.len*(lb.obj_size));
+                                    sizeof(((struct local_block_t *)0)->len), buf, lb.len);
     
     
     /* Number of objects read in */
@@ -92,11 +100,15 @@ int sfs_store(enum trend_data dataset, uint8_t *buf, unsigned int len){
         };
 
     /* First, write the data localblock */
+#ifdef SFS_DEBUG
     dlog("Writing localblock at address 0x%p\r\n", g_sb.locs[dataset]);
+#endif
     at24cx_write(g_sb.locs[dataset], (uint8_t*)&lb, sizeof(struct local_block_t)); 
 
     /* Offset past the localblock and store the contents of data */
+#ifdef SFS_DEBUG
     dlog("Storing %d bytes (%d objects) of data 0x%p\r\n", len, len/lb.obj_size, g_sb.locs[dataset]+sizeof(struct local_block_t));
+#endif
     at24cx_write(g_sb.locs[dataset]+sizeof(struct local_block_t), buf, len);
     
     return 0;
