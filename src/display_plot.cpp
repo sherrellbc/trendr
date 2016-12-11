@@ -126,8 +126,6 @@ int display_draw_plot(const char *title, const char *xtitle, const char *ytitle,
     /* Find range of data */ 
     max_x = find_max_int((int *) p_array, len, 2, 0);
     max_y = find_max_int((int *) p_array, len, 2, 1);
-    dlog("Maxes=%d,%d\r\n", max_x,max_y);
-    
 
     /* Draw generic plot outline, tick marks, title, etc */
     display_draw_plot_outline(title, xtitle, ytitle, max_x, max_y);

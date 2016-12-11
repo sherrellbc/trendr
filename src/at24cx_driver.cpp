@@ -160,7 +160,6 @@ static int at24cx_page_write(uint16_t addr, uint8_t *buf){
 int at24cx_write(uint16_t addr, uint8_t *buf, int len){
     int page_num;
     int remaining_bytes;
-    int total_pages_to_write; 
     
     /* Compute to which page the address corresponds */
     page_num = at24cx_addr_to_page(addr);
@@ -177,8 +176,8 @@ int at24cx_write(uint16_t addr, uint8_t *buf, int len){
 
     /* If the write will not fit on the current page, recursve */
     if(remaining_bytes < len){
-         total_pages_to_write = (len-remaining_bytes)/AT24CX_PAGE_SIZE;
 #if MEM_DEBUG
+         int total_pages_to_write = (len-remaining_bytes)/AT24CX_PAGE_SIZE;
          dlog("Writes across page boundaries; Requires the current partial page and %d additional pages\r\n", total_pages_to_write);
 #endif
          

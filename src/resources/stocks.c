@@ -20,17 +20,17 @@ static const struct term_str gjson_termstr = {
                                              };
 
 /* Remote TCP connection information */
-//struct tcp_session stock_remote =   {
-//                                        .ipaddr = {172, 217, 2, 206},
-//                                        .port = 80,
-//                                        .status = 0
-//                                    };
-
 struct tcp_session stock_remote =   {
-                                        .ipaddr = {192, 168, 0, 105},
+                                        .ipaddr = {172, 217, 2, 206},
                                         .port = 80,
                                         .status = 0
                                     };
+
+//struct tcp_session stock_remote =   {
+//                                        .ipaddr = {192, 168, 0, 105},
+//                                        .port = 80,
+//                                        .status = 0
+//                                    };
  
 //FIXME: Check first to ensure we are connect to an AP (when writing WiFi abstraction layer */
 float stocks_get(const char *company){

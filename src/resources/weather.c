@@ -23,12 +23,11 @@ static const struct term_str gjson_termstr = {
                                                 .len = 1
                                              };
 
-
-struct tcp_session weather_remote =     {
-                                            .ipaddr = {31,193,9,237},//{31, 193, 9, 236},
-                                            .port = 80,
-                                            .status = 0
-                                        }; 
+struct tcp_session weather_remote =   {
+                                        .ipaddr = {192, 168, 0, 105},
+                                        .port = 6565,
+                                        .status = 0
+                                    };
 
 
 /*
@@ -52,46 +51,31 @@ int construct_query(char *buf, const char* city, const char* units, const char *
 
 
 
-int weather_get(struct tcp_session *session, float (*point)[2], const char *city, const char *zipcode){
+float weather_get(const char *city, const char *zipcode){
     char url_buf[256]; 
     char float_buf[10] = {0}; 
-    char time_buf[10] = {0}; 
-    int replylen; 
+    int replylen;
 
-    dlog("Inside weather_get\r\n");
-   
+    if(-1 == esp8266_tcp_open(&weather_remote))
+        return -1;
+
     /* Clear static buf before using it */ 
     memset(g_reply, 0, sizeof(g_reply));
-
-    dlog("About to check string lengths\r\n");
 
     /* Create the query; +1 for nul-term */
     if( (strlen(g_api_url) + strlen(zipcode) + 1) > sizeof(url_buf) )
         return -1;
 
-    dlog("Checked string length\r\n"); 
-
     if(construct_query(url_buf, city, "imperial", zipcode) < 0)
         return -1;
 
-    dlog("About to http get\r\n"); 
-    
     /* Download the JSON response from the remote source */
-    if(-1 == http_json_get(session, url_buf, g_reply, sizeof(g_reply), &gjson_termstr, &replylen))
+    if(-1 == http_json_get(&weather_remote, url_buf, g_reply, sizeof(g_reply), &gjson_termstr, &replylen))
         return -1;
         
-    dlog("Got here\r\n");
-
     /* Set the nul-term and convert the string to a float directly */
     if(0 != json_value_get("temp_F", float_buf, g_reply))
         return -1; 
  
-    /* Set the nul-term and convert the string to a float directly */   
-     if(0 != json_value_get("observation_time", time_buf, g_reply))
-         return -1; 
-
-    dlog("Got eem!\r\n");
-    *point[0] = strtof(time_buf, NULL); 
-    *point[1] = strtof(float_buf, NULL); /* Propagate error if one occurs */
-    return 0;
+    return strtof(float_buf, NULL);
 }
