@@ -3,6 +3,7 @@
 
 
 #include "stocks.h"
+#include "weather.h"
 
 
 #endif  /* _RESOURCES_H */

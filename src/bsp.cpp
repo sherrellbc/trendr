@@ -13,12 +13,20 @@ void bsp_init(void){
     /* Memory */
     if(0 != at24cx_init())
         dlog("AT24CX did not properly init\r\n");
+#ifdef EEPROM_ERASE
+    dlog("[Init] Erasing EEPROM contents ..\r\n");
+    at24cx_full_erase();
+#endif
+    
+    dlog("[Init] Memory (at24cx)\r\n");
 
     /* WiFi Module */
-    esp8266_init(); 
+    esp8266_init();
+    dlog("[Init] WiFi module (esp8266-12)\r\n"); 
     
     /* Display */
     display_init();
+        dlog("[Init] Display (ili9341)\r\n");
 }
 
 

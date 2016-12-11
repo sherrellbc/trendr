@@ -13,12 +13,11 @@ extern "C" {
 /*
  * Return the current value for the specified stock
  *
- * @param session   : An active TCP session
- * @param remote    : A null-terminated string representing a stock to query
+ * @param company   : A null-terminated string representing a stock to query
  *
  * @return  : -1 on failure 
  */
-float stocks_get(struct tcp_session *session, const char *company);
+float stocks_get(const char *company);
 
 
 

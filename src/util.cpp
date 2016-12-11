@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "stdarg.h"
-#include <float.h>
+#include <limits.h>
 
 #include "util.h"
 #include "logging.h"
@@ -57,9 +57,9 @@ char *itohs(const uint8_t * const buf, const unsigned int len){
 
 
 
-float find_max_float(const float *arr, int len, int width, int column){
+int find_max_int(const int *arr, int len, int width, int column){
     int idx;
-    float max = FLT_MIN; 
+    int max = INT_MIN; 
 
     for(idx=0; idx<len; idx++)
         if(*(arr + idx*width + column) > max)
@@ -70,9 +70,9 @@ float find_max_float(const float *arr, int len, int width, int column){
 
 
 
-float find_min_float(const float *arr, int len, int width, int column){
+int find_min_int(const int *arr, int len, int width, int column){
     int idx;
-    float min = FLT_MAX; 
+    int min = INT_MAX; 
    
     for(idx=0; idx<len; idx++)
         if(*(arr + idx*width + column) < min)

@@ -12,6 +12,7 @@
 void logging_init(void){
     serial_begin(BAUD2DIV(DEBUG_BAUD_RATE));
     serial_format(SERIAL_8N1);
+    dlog("[Init] Logging subsystem\r\n");
 }
 
 

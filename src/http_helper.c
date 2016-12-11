@@ -8,11 +8,11 @@
 
 /* When querying a JSON source, the following termination sequence is used to parse the response */
 static const struct term_str gjson_termstr = {
-                                                .str = "]",
-                                                .len = 1
+                                                .str = "200}", //"]",
+                                                .len = 4
                                              };
 
-int http_json_get(struct tcp_session *session, char *remote, char *reply, size_t len, int *replylen){
+int http_json_get(struct tcp_session *session, char *remote, char *reply, size_t len, const struct term_str *str, int *replylen){
     char buf[256] = {0}; 
     int cmdlen; 
    
@@ -20,7 +20,7 @@ int http_json_get(struct tcp_session *session, char *remote, char *reply, size_t
     if(-1 == esp8266_tcp_send(session, (uint8_t*)buf, cmdlen))
         return -1; 
     
-    if(-1 == esp8266_read(reply, len, replylen, &gjson_termstr))
+    if(-1 == esp8266_read(reply, len, replylen, str))
         return -1;
 
     /* Lazy checker for now .. check if we did not fail */

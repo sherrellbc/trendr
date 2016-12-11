@@ -27,6 +27,14 @@ void do_unit_tests(uint32_t which);
 int screen_ut(void);
 
 
+
+/*
+ * Plot a compile-time constant set of points on the display
+ */
+int plot_ut(void);
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,6 +54,7 @@ int ap_connect_ut(void);
  * @return  : -1 on failure
  */
 int mem_ut(void);
+
 
 
 #ifdef __cplusplus

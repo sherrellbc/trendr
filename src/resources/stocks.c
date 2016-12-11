@@ -13,12 +13,34 @@ static const char * g_finance_api_url = "http://finance.google.com/finance/info?
 /* Static buffer in application DATA section; too large for stack */
 static char g_reply[2048]; 
 
+/* The termination string sent from the API source */
+static const struct term_str gjson_termstr = {
+                                                .str = "]",
+                                                .len = 1
+                                             };
 
+/* Remote TCP connection information */
+//struct tcp_session stock_remote =   {
+//                                        .ipaddr = {172, 217, 2, 206},
+//                                        .port = 80,
+//                                        .status = 0
+//                                    };
 
-float stocks_get(struct tcp_session *session, const char *company){
+struct tcp_session stock_remote =   {
+                                        .ipaddr = {192, 168, 0, 105},
+                                        .port = 80,
+                                        .status = 0
+                                    };
+ 
+//FIXME: Check first to ensure we are connect to an AP (when writing WiFi abstraction layer */
+float stocks_get(const char *company){
     char url_buf[128]; 
     char float_buf[10] = {0}; 
     int replylen; 
+
+    
+    if(-1 == esp8266_tcp_open(&stock_remote))
+        return -1;
    
     /* Clear static buf before using it */ 
     memset(g_reply, 0, sizeof(g_reply));
@@ -30,7 +52,7 @@ float stocks_get(struct tcp_session *session, const char *company){
     sprintf(url_buf, "%s%s", g_finance_api_url, company); 
     
     /* Download the JSON response from the remote source */
-    if(-1 == http_json_get(session, url_buf, g_reply, sizeof(g_reply), &replylen))
+    if(-1 == http_json_get(&stock_remote, url_buf, g_reply, sizeof(g_reply), &gjson_termstr, &replylen))
         return -1;
 
     /* Set the nul-term and convert the string to a float directly */

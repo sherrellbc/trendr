@@ -39,7 +39,7 @@ static void report_prelude(void){
 
 
 int main(void){
-    char cmd_buf[128]; 
+    char cmd_buf[256]; 
     char resp_buf[1024];
     int recvd_chars, nbytes;
     

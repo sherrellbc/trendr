@@ -8,8 +8,6 @@
 extern "C" {
 #endif
 
-/* Define for debug mode */
-//#define ESP8266_DEBUG
 
 
 /* Enum representing the modes of encryption */

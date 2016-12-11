@@ -359,10 +359,9 @@ int esp8266_read(char *reply, size_t len, int *replylen, const struct term_str *
         if(if_avail() != 0){                                                                                           
             reply[recvd_chars] = if_read();
             recvd_chars++;
+//            dlog("%c", reply[recvd_chars-1]);
         }else
             continue;
-
-//        dlog("Got %c[%d]; Comparing against %c[%d]\r\n", reply[recvd_chars-1], reply[recvd_chars-1], str->str[term_str_idx], str->str[term_str_idx]);
 
         /* Check if the input stream has provided the specified termination string */
         if(reply[recvd_chars-1] == str->str[term_str_idx]){
@@ -387,7 +386,8 @@ int esp8266_read(char *reply, size_t len, int *replylen, const struct term_str *
     }
 
  #ifdef ESP8266_DEBUG 
-     dlog("[db; %s] Recd'd %d bytes; tci=%d\r\n", __FUNCTION__, recvd_chars, term_str_idx);
+    dlog("[db]; %s] Recd'd %d bytes; tci=%d\r\n", __FUNCTION__, recvd_chars, term_str_idx);
+    dlog("[db]; Got\r\n[\r\n%s\r\n]\r\n", reply);
  #endif
     return ret;
 }

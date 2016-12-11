@@ -19,7 +19,7 @@ int json_get_item_count(const char *json_str){
     return count/4; 
 }
 
-
+char buf[64]; 
 
 /* Lazy json extractor -- writes nul-term */
 /* Assume string has at least one character and is not NULL */
@@ -51,6 +51,11 @@ int json_value_get(const char *key, char *value, const char *json_str){
             mode = 1;
 
             /* Check if key is an identical match */
+            memcpy(buf, start, end-start+1);
+            buf[end-start+1] = '\0'; 
+#ifdef JSON_DEBUG
+            dlog("Comparing %s:%s\r\n", key, buf);
+#endif
             if(0 == strncmp(key, start, end-start+1)){
                 if(strlen(key) == end-start+1){
                     key_match = 1;  /* Found key */ 
